@@ -33,9 +33,5 @@ async fn main() {
         .init();
     dotenv().ok();
 
-    let trace_layer = TraceLayer::new_for_http()
-        .on_request(DefaultOnRequest::new().level(Level::INFO))
-        .on_response(DefaultOnResponse::new().level(Level::DEBUG));
-
     start_server().await.expect("Failed to start server.");
 }

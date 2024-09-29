@@ -33,9 +33,7 @@ async fn generate_example_qr_image(
         .generate_offer_url(&certificate_data)
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
-    let qr_url = manager.credential_offer_uri().unwrap().to_string();
-
-    let qr_url = format!("openid-credential-offer://?credential_offer_uri={}", qr_url);
+    let qr_url = manager.credential_offer_query(true).unwrap().to_string();
 
     // Generate QR code from the URL
     let qr = QrCode::encode_text(&qr_url, QrCodeEcc::Medium)
