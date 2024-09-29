@@ -1,3 +1,5 @@
+use crate::manager::ManagerType;
+use crate::services::{CertificateData, CertificateService};
 use axum::{
     body::Body,
     extract::State,
@@ -12,11 +14,8 @@ use image::{ImageBuffer, Rgb};
 use qrcodegen::{QrCode, QrCodeEcc};
 use std::io::Cursor;
 
-use crate::services::{CertificateData, CertificateService};
-use crate::storage::SharedStorage;
-
 async fn generate_example_qr_image(
-    State(storage): State<SharedStorage>,
+    State(manager): State<ManagerType>,
 ) -> Result<impl IntoResponse, StatusCode> {
     // Create an example certificate
     let certificate_data = CertificateData {
@@ -28,11 +27,15 @@ async fn generate_example_qr_image(
         date: Utc::now(),
     };
 
-    let service = CertificateService::new(storage);
+    let service = CertificateService::new();
 
     let qr_url = service
         .generate_offer_url(&certificate_data)
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    let qr_url = manager.credential_offer_uri().unwrap().to_string();
+
+    let qr_url = format!("openid-credential-offer://?credential_offer_uri={}", qr_url);
 
     // Generate QR code from the URL
     let qr = QrCode::encode_text(&qr_url, QrCodeEcc::Medium)
@@ -92,6 +95,7 @@ async fn generate_example_qr_image(
     Ok(response)
 }
 
-pub fn create_example_router() -> Router<SharedStorage> {
+pub fn create_example_router() -> Router<ManagerType> {
+    log::info!("Creating router for /example/qr");
     Router::new().route("/qr", get(generate_example_qr_image))
 }

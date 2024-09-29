@@ -33,25 +33,9 @@ async fn main() {
         .init();
     dotenv().ok();
 
-    let repo: SharedStorage = new_shared_storage();
-
     let trace_layer = TraceLayer::new_for_http()
         .on_request(DefaultOnRequest::new().level(Level::INFO))
         .on_response(DefaultOnResponse::new().level(Level::DEBUG));
 
-    let app = Router::new()
-        .nest("/api/v1", create_router())
-        .nest("/example", create_example_router())
-        .with_state(repo)
-        .layer(trace_layer)
-        .layer(CorsLayer::permissive())
-        .merge(SwaggerUi::new("/docs").url("/api-doc/openapi.json", ApiDoc::openapi()))
-        .fallback(handle_404);
-
-    let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
-
-    log::info!("Server running at http://{}", addr);
-
-    let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
-    axum::serve(listener, app).await.unwrap();
+    start_server().await.expect("Failed to start server.");
 }

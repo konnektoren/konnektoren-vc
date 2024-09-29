@@ -4,24 +4,37 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-axum = { version = "0.7", features = ["macros"] }
+axum = { version = "0.6", features = ["macros"] }
+axum-auth = "0.4"
 base64 = "0.22.1"
 chrono = "0.4.38"
+did-key = "*"
 dotenv = "0.15.0"
+futures = "0.3.30"
 hyper = "1.4.1"                                                                                            # For generating QR codes
-image = "0.24.7"
+image = "0.24"
+jsonwebtoken = "9.3.0"
 konnektoren-core = { git = "https://github.com/konnektoren/konnektoren-rs.git", default-features = false }
 log = "0.4.21"
 num-bigint = "0.4.5"
-tokio = { version = "1", features = ["full"] }
+oid4vc-core = { git = "https://github.com/impierce/openid4vc", branch = "dev" }
+oid4vci = { git = "https://github.com/impierce/openid4vc", branch = "dev" }
+oid4vc-manager = { git = "https://github.com/impierce/openid4vc", branch = "dev" }
+pretty_env_logger = "0.5.0"
+qrcodegen = "1.0.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-tower = "0.4"
+tokio = { version = "1", features = ["full"] }
+tower = "0.5.1"
 tower-http = { version = "0.6", features = ["cors", "trace"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 utoipa = { version = "4.2", features = ["axum_extras"] }
 utoipa-swagger-ui = { version = "7", features = ["axum"] }
 uuid = { version = "1.10.0", features = ["serde", "v4"] }
-pretty_env_logger = "0.5.0"
-qrcodegen = "1.0.0"
+url = "2.2"
+
+subtle = "=2.5.0"
+anyhow = "1.0.89"
+reqwest = "0.12.7"
+lazy_static = "1.5.0"
