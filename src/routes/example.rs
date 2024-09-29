@@ -1,5 +1,6 @@
 use axum::{
     body::Body,
+    extract::State,
     http::{header, StatusCode},
     response::{IntoResponse, Response},
     routing::get,
@@ -9,38 +10,32 @@ use chrono::Utc;
 use hyper::body::Bytes;
 use image::{ImageBuffer, Rgb};
 use qrcodegen::{QrCode, QrCodeEcc};
-use serde::Serialize;
 use std::io::Cursor;
 
-use crate::services::CertificateData;
+use crate::services::{CertificateData, CertificateService};
 use crate::storage::SharedStorage;
 
-#[derive(Serialize)]
-struct ExampleCertificate {
-    certificate: CertificateData,
-    qr_data: String,
-}
-
-async fn generate_example_qr_image() -> Result<impl IntoResponse, StatusCode> {
+async fn generate_example_qr_image(
+    State(storage): State<SharedStorage>,
+) -> Result<impl IntoResponse, StatusCode> {
     // Create an example certificate
-    let example_certificate = ExampleCertificate {
-        certificate: CertificateData {
-            game_path_name: "Example Game".to_string(),
-            total_challenges: 10,
-            solved_challenges: 8,
-            performance_percentage: 80,
-            profile_name: "John Doe".to_string(),
-            date: Utc::now(),
-        },
-        qr_data: "https://example.com/verify-certificate".to_string(),
+    let certificate_data = CertificateData {
+        game_path_name: "Example Game".to_string(),
+        total_challenges: 10,
+        solved_challenges: 8,
+        performance_percentage: 80,
+        profile_name: "John Doe".to_string(),
+        date: Utc::now(),
     };
 
-    // Serialize the certificate to JSON
-    let json_data = serde_json::to_string(&example_certificate)
+    let service = CertificateService::new(storage);
+
+    let qr_url = service
+        .generate_offer_url(&certificate_data)
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
-    // Generate QR code
-    let qr = QrCode::encode_text(&json_data, QrCodeEcc::Medium)
+    // Generate QR code from the URL
+    let qr = QrCode::encode_text(&qr_url, QrCodeEcc::Medium)
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     // Set the scale factor to make each QR module larger

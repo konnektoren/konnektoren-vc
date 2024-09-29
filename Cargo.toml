@@ -7,6 +7,8 @@ edition = "2021"
 axum = { version = "0.7", features = ["macros"] }
 base64 = "0.22.1"
 chrono = "0.4.38"
+dotenv = "0.15.0"
+hyper = "1.4.1"                                                                                            # For generating QR codes
 image = "0.24.7"
 konnektoren-core = { git = "https://github.com/konnektoren/konnektoren-rs.git", default-features = false }
 log = "0.4.21"
@@ -15,10 +17,11 @@ tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tower = "0.4"
-tower-http = { version = "0.5", features = ["cors"] }
-dotenv = "0.15.0"
+tower-http = { version = "0.6", features = ["cors", "trace"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 utoipa = { version = "4.2", features = ["axum_extras"] }
 utoipa-swagger-ui = { version = "7", features = ["axum"] }
+uuid = { version = "1.10.0", features = ["serde", "v4"] }
 pretty_env_logger = "0.5.0"
 qrcodegen = "1.0.0"
-hyper = "1.4.1"                                                                                        # For generating QR codes
