@@ -1,0 +1,75 @@
+{
+  "format": "jwt_vc_json",
+  "cryptographic_binding_methods_supported": ["did:key"],
+  "credential_signing_alg_values_supported": ["EdDSA"],
+  "credential_definition": {
+    "type": ["VerifiableCredential", "KonnektorenCredential"],
+    "credentialSubject": {
+      "Level": {
+        "display": [
+          {
+            "name": "Level",
+            "locale": "en-US"
+          }
+        ]
+      },
+      "Total Challenges": {
+        "display": [
+          {
+            "name": "Total Challenges",
+            "locale": "en-US"
+          }
+        ]
+      },
+      "Solved Challenges": {
+        "display": [
+          {
+            "name": "Solved Challenges",
+            "locale": "en-US"
+          }
+        ]
+      },
+      "Performance Percentage": {
+        "display": [
+          {
+            "name": "Performance Percentage",
+            "locale": "en-US"
+          }
+        ]
+      },
+      "Name": {
+        "display": [
+          {
+            "name": "Name",
+            "locale": "en-US"
+          }
+        ]
+      },
+      "Date": {
+        "display": [
+          {
+            "name": "Date",
+            "locale": "en-US"
+          }
+        ]
+      }
+    }
+  },
+  "proof_types_supported": {
+    "jwt": {
+      "proof_signing_alg_values_supported": ["EdDSA", "ES256"]
+    }
+  },
+  "display": [
+    {
+      "name": "Konnektoren Credential Issuer",
+      "locale": "en-US",
+      "logo": {
+        "url": "https://konnektoren.help/favicon.png",
+        "alt_text": "konnektoren.help square logo"
+      },
+      "background_color": "#ff7e00",
+      "text_color": "#6200ea"
+    }
+  ]
+}

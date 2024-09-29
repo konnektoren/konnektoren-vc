@@ -1,0 +1,29 @@
+{
+  "@context": [
+    "https://www.w3.org/2018/credentials/v1",
+    "https://konnektoren.help/2023/credentials/v1"
+  ],
+  "id": "urn:uuid:12345678-1234-5678-abcd-1234567890ab",
+  "type": ["VerifiableCredential", "KonnektorenCredential"],
+  "issuanceDate": "2023-04-01T12:00:00Z",
+  "issuer": {
+    "id": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK",
+    "name": "Konnektoren Credential Issuer"
+  },
+  "credentialSubject": {
+    "id": "did:key:z6MkjLrk3gKS2nnkeWcmcxiZPGPDCkbQtr1PhaZe8Qb7eWGn",
+    "Level": "Introduction to Rust",
+    "Total Challenges": 10,
+    "Solved Challenges": 8,
+    "Performance Percentage": 80,
+    "Name": "Alice Rustacean",
+    "Date": "2023-03-31T18:30:00Z"
+  },
+  "proof": {
+    "type": "Ed25519Signature2018",
+    "created": "2023-04-01T12:00:00Z",
+    "proofPurpose": "assertionMethod",
+    "verificationMethod": "did:key:z6MkhaXgBZDvotDkL5257faiztiGiC2QtKLGpbnnEGta2doK#keys-1",
+    "jws": "eyJhbGciOiJFZERTQSJ9..."
+  }
+}

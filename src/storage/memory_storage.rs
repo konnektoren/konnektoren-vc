@@ -40,9 +40,11 @@ impl<CFC: CredentialFormatCollection + DeserializeOwned> Storage<CFC> for Memory
     ) -> HashMap<String, CredentialConfigurationsSupportedObject<CFC>> {
         log::debug!("get_credential_configurations_supported");
         vec![(
-            "UniversityDegree_JWT".to_string(),
-            serde_json::from_reader(File::open("./assets/university_degree_config.json").unwrap())
-                .unwrap(),
+            "KonnektorenCertificate_JWT".to_string(),
+            serde_json::from_reader(
+                File::open("./assets/konnektoren_certificate_config.json").unwrap(),
+            )
+            .unwrap(),
         )]
         .into_iter()
         .collect()
@@ -119,8 +121,8 @@ impl<CFC: CredentialFormatCollection + DeserializeOwned> Storage<CFC> for Memory
         };
 
         let credential_json = match &type_[..] {
-            [_, b] if b == "UniversityDegreeCredential" => {
-                File::open("./assets/university_degree.json").unwrap()
+            [_, b] if b == "KonnektorenCredential" => {
+                File::open("./assets/konnektoren_certificate.json").unwrap()
             }
             _ => unreachable!(),
         };
