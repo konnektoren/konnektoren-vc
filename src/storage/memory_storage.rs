@@ -1,5 +1,7 @@
 use std::{collections::HashMap, fs::File};
 
+use crate::config::load_config;
+use did_key::{generate, DIDCore, Document, Ed25519KeyPair, PatchedKeyPair};
 use futures::executor::block_on;
 use jsonwebtoken::{Algorithm, Header};
 use lazy_static::lazy_static;
@@ -36,9 +38,10 @@ impl<CFC: CredentialFormatCollection + DeserializeOwned> Storage<CFC> for Memory
     fn get_credential_configurations_supported(
         &self,
     ) -> HashMap<String, CredentialConfigurationsSupportedObject<CFC>> {
+        log::debug!("get_credential_configurations_supported");
         vec![(
             "UniversityDegree_JWT".to_string(),
-            serde_json::from_reader(File::open("./assets/university_degree.json").unwrap())
+            serde_json::from_reader(File::open("./assets/university_degree_config.json").unwrap())
                 .unwrap(),
         )]
         .into_iter()
@@ -46,6 +49,7 @@ impl<CFC: CredentialFormatCollection + DeserializeOwned> Storage<CFC> for Memory
     }
 
     fn get_authorization_code(&self) -> Option<AuthorizationCode> {
+        log::debug!("get_authorization_code");
         None
     }
 
@@ -57,10 +61,12 @@ impl<CFC: CredentialFormatCollection + DeserializeOwned> Storage<CFC> for Memory
     }
 
     fn get_pre_authorized_code(&self) -> Option<PreAuthorizedCode> {
+        log::debug!("get_pre_authorized_code");
         Some(PRE_AUTHORIZED_CODE.clone())
     }
 
     fn get_token_response(&self, token_request: TokenRequest) -> Option<TokenResponse> {
+        log::debug!("get_token_response: {:?}", token_request);
         match token_request {
             TokenRequest::AuthorizationCode { code, .. } => code == CODE.clone(),
             TokenRequest::PreAuthorizedCode {
@@ -88,6 +94,19 @@ impl<CFC: CredentialFormatCollection + DeserializeOwned> Storage<CFC> for Memory
         credential_format: CFC,
         signer: SigningSubject,
     ) -> Option<CredentialResponse> {
+        log::debug!(
+            "Getting credential response in memory storage {}",
+            access_token
+        );
+
+        log::debug!("access_token: {}", access_token);
+        log::debug!("credential_format: {:?}", credential_format);
+        log::debug!("subject did: {}", subject_did);
+        log::debug!("issuer did: {}", issuer_did);
+
+        let issuer_did = get_issuer_did();
+        log::debug!("updated issuer did {}", issuer_did);
+
         let type_ = match serde_json::from_value::<CredentialFormats<WithParameters>>(
             serde_json::to_value(credential_format).unwrap(),
         )
@@ -106,10 +125,14 @@ impl<CFC: CredentialFormatCollection + DeserializeOwned> Storage<CFC> for Memory
             _ => unreachable!(),
         };
 
+        log::debug!("Credential JSON: {:?}", credential_json);
+
         let mut verifiable_credential: serde_json::Value =
             serde_json::from_reader(credential_json).unwrap();
         verifiable_credential["issuer"] = json!(issuer_did);
         verifiable_credential["credentialSubject"]["id"] = json!(subject_did);
+
+        log::debug!("Verifiable Credential: {:?}", verifiable_credential);
 
         (access_token == ACCESS_TOKEN.clone()).then_some(CredentialResponse {
             credential: CredentialResponseType::Immediate {
@@ -139,8 +162,20 @@ impl<CFC: CredentialFormatCollection + DeserializeOwned> Storage<CFC> for Memory
     }
 
     fn get_state(&self) -> Option<String> {
+        log::debug!("Getting state in memory storage");
         None
     }
 
-    fn set_state(&mut self, _state: String) {}
+    fn set_state(&mut self, _state: String) {
+        log::debug!("Setting state in memory storage: {}", _state)
+    }
+}
+
+pub fn get_issuer_did() -> String {
+    let (priv_key, _) = load_config();
+
+    let issuer_key: PatchedKeyPair = generate::<Ed25519KeyPair>(Some(priv_key.as_bytes()));
+
+    let document: Document = issuer_key.get_did_document(did_key::Config::default());
+    document.id
 }

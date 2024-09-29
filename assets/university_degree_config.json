@@ -1,0 +1,51 @@
+{
+  "format": "jwt_vc_json",
+  "cryptographic_binding_methods_supported": ["did:key"],
+  "credential_signing_alg_values_supported": ["EdDSA"],
+  "credential_definition": {
+    "type": ["VerifiableCredential", "UniversityDegreeCredential"],
+    "credentialSubject": {
+      "given_name": {
+        "display": [
+          {
+            "name": "Given Name",
+            "locale": "en-US"
+          }
+        ]
+      },
+      "last_name": {
+        "display": [
+          {
+            "name": "Surname",
+            "locale": "en-US"
+          }
+        ]
+      },
+      "degree": {},
+      "gpa": {
+        "display": [
+          {
+            "name": "GPA"
+          }
+        ]
+      }
+    }
+  },
+  "proof_types_supported": {
+    "jwt": {
+      "proof_signing_alg_values_supported": ["EdDSA", "ES256"]
+    }
+  },
+  "display": [
+    {
+      "name": "Konnektoren Credential Issuer",
+      "locale": "en-US",
+      "logo": {
+        "url": "https://konnektoren.help/favicon.png",
+        "alt_text": "konnektoren.help square logo"
+      },
+      "background_color": "#ff7e00",
+      "text_color": "#6200ea"
+    }
+  ]
+}

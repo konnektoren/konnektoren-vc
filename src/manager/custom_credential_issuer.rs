@@ -7,6 +7,7 @@ use oid4vci::credential_format_profiles::CredentialFormatCollection;
 use oid4vci::credential_issuer::authorization_server_metadata::AuthorizationServerMetadata;
 use oid4vci::credential_issuer::credential_issuer_metadata::CredentialIssuerMetadata;
 use oid4vci::credential_issuer::CredentialIssuer;
+use serde_json::json;
 use std::net::TcpListener;
 use std::sync::Arc;
 use url::Url;
@@ -43,7 +44,7 @@ where
                 subject: subject.clone(),
                 metadata: CredentialIssuerMetadata {
                     credential_issuer: issuer_url.clone(),
-                    authorization_servers: vec![],
+                    authorization_servers: vec![issuer_url.clone()],
                     credential_endpoint: issuer_url.join("/credential")?,
                     batch_credential_endpoint: Some(issuer_url.join("/batch_credential")?),
                     deferred_credential_endpoint: None,
@@ -51,7 +52,16 @@ where
                     credential_response_encryption: None,
                     credential_identifiers_supported: None,
                     signed_metadata: None,
-                    display: None,
+                    display: Some(vec![json!({
+                        "name": "Konnektoren Credential Issuer",
+                        "locale": "en-US",
+                        "logo": {
+                            "url": "https://konnektoren.help/favicon.png",
+                            "alt_text": "konnektoren.help square logo"
+                        },
+                        "background_color": "#ff7e00",
+                        "text_color": "#6200ea"
+                    })]),
                     credential_configurations_supported: storage
                         .get_credential_configurations_supported(),
                 },
