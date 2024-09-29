@@ -1,0 +1,25 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - PRIVATE_KEY=${PRIVATE_KEY}
+      - ISSUER_URL=${ISSUER_URL}
+      - RUST_LOG=${LOG_LEVEL:-debug}
+      - DOMAIN=${DOMAIN:-localhost}
+    #ports:
+    #  - "3000:3000"
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  cloudflared:
+    profiles:
+      - cloudflare
+    image: cloudflare/cloudflared:latest
+    command: tunnel --no-autoupdate run --token ${CF_TUNNEL_TOKEN}
+    environment:
+      - CF_TUNNEL_TOKEN=${CF_TUNNEL_TOKEN}
+    depends_on:
+      - server
