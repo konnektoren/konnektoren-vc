@@ -1,6 +1,6 @@
 use chrono::Utc;
 
-#[derive(serde::Serialize, serde::Deserialize, utoipa::ToSchema, Clone)]
+#[derive(serde::Serialize, serde::Deserialize, utoipa::ToSchema, Clone, Debug)]
 pub struct CertificateData {
     pub game_path_name: String,
     pub total_challenges: usize,
