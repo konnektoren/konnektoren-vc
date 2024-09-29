@@ -4,7 +4,6 @@ use crate::storage::MemoryStorage;
 use crate::{create_example_router, manager::ManagerType};
 use crate::{v1, well_known};
 use anyhow::Result;
-use axum::routing::get;
 use axum::Router;
 use did_key::{generate, DIDCore, Ed25519KeyPair, PatchedKeyPair};
 use oid4vc_manager::{methods::key_method::KeySubject, servers::credential_issuer::Server};
@@ -31,7 +30,7 @@ pub async fn start_server() -> Result<()> {
     // Create a CredentialIssuerManager
     let credential_issuer_manager = ManagerType::with_config(
         Some(listener),
-        MemoryStorage,
+        MemoryStorage::new(),
         Arc::new(issuer_subject),
         config,
     )?;

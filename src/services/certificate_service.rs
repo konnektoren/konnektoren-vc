@@ -1,18 +1,21 @@
+use crate::certificate_data::CertificateData;
 use crate::config::load_config;
-use base64::{engine::general_purpose, Engine as _};
-use chrono::Utc;
+use crate::storage::MemoryStorage;
 use qrcodegen::{QrCode, QrCodeEcc};
-use serde_json::json;
 use uuid::Uuid;
 
-pub struct CertificateService {
+pub struct CertificateService<'a> {
     issuer_url: String,
+    storage: &'a MemoryStorage,
 }
 
-impl CertificateService {
-    pub fn new() -> Self {
+impl<'a> CertificateService<'a> {
+    pub fn new(storage: &'a MemoryStorage) -> Self {
         let (_, issuer_url) = load_config();
-        Self { issuer_url }
+        Self {
+            issuer_url,
+            storage,
+        }
     }
 
     pub fn generate_qr_code(&self, certificate_data: &CertificateData) -> Result<String, String> {
@@ -44,20 +47,13 @@ impl CertificateService {
         let offer_id = Uuid::new_v4().to_string();
         let credential_offer_uri = format!("{}/api/v1/offers/{}", self.issuer_url, offer_id);
 
+        // Store the certificate data
+        self.storage
+            .store_certificate(offer_id.clone(), certificate_data.clone());
+
         Ok(format!(
             "openid-credential-offer://?credential_offer_uri={}",
             credential_offer_uri
         ))
     }
-}
-
-#[derive(serde::Serialize, serde::Deserialize, utoipa::ToSchema)]
-pub struct CertificateData {
-    pub game_path_name: String,
-    pub total_challenges: usize,
-    pub solved_challenges: usize,
-    pub performance_percentage: u8,
-    pub profile_name: String,
-    #[schema(value_type = String, format = DateTime)]
-    pub date: chrono::DateTime<Utc>,
 }

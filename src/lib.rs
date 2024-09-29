@@ -1,3 +1,4 @@
+mod certificate_data;
 mod config;
 mod manager;
 mod routes;
@@ -8,6 +9,7 @@ mod storage;
 pub use routes::*;
 
 pub mod prelude {
+    pub use crate::certificate_data::*;
     pub use crate::config::*;
     pub use crate::manager::*;
     pub use crate::routes::*;

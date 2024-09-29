@@ -1,5 +1,7 @@
+use crate::certificate_data::CertificateData;
 use crate::manager::ManagerType;
-use crate::services::{CertificateData, CertificateService};
+use crate::services::CertificateService;
+use axum::extract::State;
 use axum::http::StatusCode;
 use axum::routing::post;
 use axum::{Json, Router};
@@ -10,7 +12,7 @@ use axum::{Json, Router};
     post,
     operation_id = "generate_certificate_qr",
     tag = "certificate_v1",
-    path = "/api/v1/certificates/qr", // Update this line
+    path = "/api/v1/certificates/qr",
     request_body = CertificateData,
     responses(
         (status = 200, description = "QR Code generated successfully", body = String),
@@ -19,9 +21,11 @@ use axum::{Json, Router};
     )
 )]
 pub async fn send_certificate_and_get_qr(
+    State(manager): State<ManagerType>,
     Json(certificate_data): Json<CertificateData>,
 ) -> Result<Json<String>, (StatusCode, String)> {
-    let service = CertificateService::new();
+    let storage = manager.storage;
+    let service = CertificateService::new(&storage);
     service
         .generate_qr_code(&certificate_data)
         .map(Json)

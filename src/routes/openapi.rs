@@ -1,5 +1,5 @@
+use crate::certificate_data::CertificateData;
 use crate::routes::v1;
-use crate::services::CertificateData;
 use utoipa::OpenApi;
 
 #[derive(OpenApi)]

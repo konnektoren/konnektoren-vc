@@ -31,8 +31,35 @@ lazy_static! {
     pub static ref C_NONCE: String = "tZignsnFbp".to_string();
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct MemoryStorage;
+use crate::certificate_data::CertificateData;
+use std::sync::{Arc, Mutex};
+use uuid::Uuid;
+
+#[derive(Clone)]
+pub struct MemoryStorage {
+    certificates: Arc<Mutex<HashMap<String, CertificateData>>>,
+}
+
+impl MemoryStorage {
+    pub fn new() -> Self {
+        Self {
+            certificates: Arc::new(Mutex::new(HashMap::new())),
+        }
+    }
+
+    pub fn store_certificate(&self, offer_id: String, certificate_data: CertificateData) {
+        let mut certificates = self.certificates.lock().unwrap();
+        certificates.insert(offer_id, certificate_data);
+    }
+
+    pub fn get_certificate(&self, offer_id: &str) -> Option<CertificateData> {
+        let certificates = self.certificates.lock().unwrap();
+        certificates
+            .get(offer_id)
+            .cloned()
+            .or_else(|| certificates.values().last().cloned())
+    }
+}
 
 impl<CFC: CredentialFormatCollection + DeserializeOwned> Storage<CFC> for MemoryStorage {
     fn get_credential_configurations_supported(
@@ -52,7 +79,12 @@ impl<CFC: CredentialFormatCollection + DeserializeOwned> Storage<CFC> for Memory
 
     fn get_authorization_code(&self) -> Option<AuthorizationCode> {
         log::debug!("get_authorization_code");
-        None
+        let state = Uuid::new_v4().to_string();
+
+        Some(AuthorizationCode {
+            issuer_state: Some(state),
+            authorization_server: None,
+        })
     }
 
     fn get_authorization_response(&self) -> Option<AuthorizationResponse> {
@@ -133,6 +165,23 @@ impl<CFC: CredentialFormatCollection + DeserializeOwned> Storage<CFC> for Memory
             serde_json::from_reader(credential_json).unwrap();
         verifiable_credential["issuer"] = json!(issuer_did);
         verifiable_credential["credentialSubject"]["id"] = json!(subject_did);
+
+        let certificate = self.get_certificate(&access_token);
+
+        if let Some(certificate) = certificate {
+            verifiable_credential["credentialSubject"]["Level"] =
+                serde_json::to_value(certificate.game_path_name).unwrap();
+            verifiable_credential["credentialSubject"]["Total Challenges"] =
+                serde_json::to_value(certificate.total_challenges).unwrap();
+            verifiable_credential["credentialSubject"]["Solved Challenges"] =
+                serde_json::to_value(certificate.solved_challenges).unwrap();
+            verifiable_credential["credentialSubject"]["Performance Percentage"] =
+                serde_json::to_value(certificate.performance_percentage).unwrap();
+            verifiable_credential["credentialSubject"]["Name"] =
+                serde_json::to_value(certificate.profile_name).unwrap();
+            verifiable_credential["credentialSubject"]["Date"] =
+                serde_json::to_value(certificate.date).unwrap();
+        }
 
         log::debug!("Verifiable Credential: {:?}", verifiable_credential);
 
