@@ -3,6 +3,7 @@ use crate::manager::ManagerType;
 use anyhow::Result;
 use qrcodegen::{QrCode, QrCodeEcc};
 use url::Url;
+use uuid::Uuid;
 
 pub struct CertificateService<'a> {
     manager: &'a ManagerType,
@@ -52,13 +53,19 @@ impl<'a> CertificateService<'a> {
         let pre_authorized_code = offer_json["grants"]
             ["urn:ietf:params:oauth:grant-type:pre-authorized_code"]["pre-authorized_code"]
             .as_str()
-            .ok_or_else(|| anyhow::anyhow!("No pre-authorized code found"))?;
+            .ok_or_else(|| anyhow::anyhow!("No pre-authorized code found"))?
+            .to_string();
 
-        // Store the certificate data with the pre-authorized code
+        // Generate a unique certificate ID
+        let certificate_id = Uuid::new_v4().to_string();
+
+        // Store the certificate data and associate it with the pre-authorized code
         self.manager
             .storage
-            .store_certificate(pre_authorized_code.to_string(), certificate_data.clone());
-
+            .store_certificate(certificate_id.clone(), certificate_data.clone());
+        self.manager
+            .storage
+            .associate_pre_authorized_code(pre_authorized_code.clone(), certificate_id);
         Ok(offer_url)
     }
 

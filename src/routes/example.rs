@@ -13,10 +13,8 @@ use chrono::Utc;
 use hyper::body::Bytes;
 use image::{ImageBuffer, Rgb};
 use qrcodegen::{QrCode, QrCodeEcc};
-use serde_json::Value;
 use std::io::Cursor;
 use url::Url;
-use uuid::Uuid;
 
 async fn generate_example_qr_image(
     State(manager): State<ManagerType>,
@@ -38,31 +36,9 @@ async fn generate_example_qr_image(
 
     // Parse the URL and extract the credential_offer parameter
     let parsed_url = Url::parse(&qr_url).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    let credential_offer = parsed_url
-        .query_pairs()
-        .find(|(key, _)| key == "credential_offer")
-        .map(|(_, value)| value.into_owned())
-        .ok_or(StatusCode::INTERNAL_SERVER_ERROR)?;
-
-    // Decode and parse the credential offer JSON
-    let decoded_offer =
-        urlencoding::decode(&credential_offer).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-    let offer_json: Value =
-        serde_json::from_str(&decoded_offer).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
-    // Extract the pre-authorized code
-    let pre_authorized_code = offer_json["grants"]
-        ["urn:ietf:params:oauth:grant-type:pre-authorized_code"]["pre-authorized_code"]
-        .as_str()
-        .ok_or(StatusCode::INTERNAL_SERVER_ERROR)?;
-
-    // Store the certificate data with the pre-authorized code
-    manager
-        .storage
-        .store_certificate(pre_authorized_code.to_string(), certificate_data);
 
     // Generate QR code from the URL
-    let qr = QrCode::encode_text(&qr_url, QrCodeEcc::Medium)
+    let qr = QrCode::encode_text(&parsed_url.to_string(), QrCodeEcc::Medium)
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     // Set the scale factor to make each QR module larger

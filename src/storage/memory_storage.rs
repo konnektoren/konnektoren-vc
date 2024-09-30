@@ -22,13 +22,14 @@ use serde::de::DeserializeOwned;
 use serde_json::json;
 
 lazy_static! {
-    pub static ref CODE: String = generate_authorization_code(16);
-    pub static ref PRE_AUTHORIZED_CODE: PreAuthorizedCode = PreAuthorizedCode {
+    pub static ref C_NONCE: String = "tZignsnFbp".to_string();
+}
+
+fn generate_pre_authorized_code() -> PreAuthorizedCode {
+    PreAuthorizedCode {
         pre_authorized_code: generate_authorization_code(16),
         ..Default::default()
-    };
-    pub static ref ACCESS_TOKEN: String = "czZCaGRSa3F0MzpnWDFmQmF0M2JW".to_string();
-    pub static ref C_NONCE: String = "tZignsnFbp".to_string();
+    }
 }
 
 use crate::certificate_data::CertificateData;
@@ -39,26 +40,65 @@ use uuid::Uuid;
 #[derive(Clone)]
 pub struct MemoryStorage {
     certificates: Arc<Mutex<HashMap<String, CertificateData>>>,
+    pre_authorized_codes: Arc<Mutex<HashMap<String, String>>>, // pre-authorized code -> certificate id
+    access_tokens: Arc<Mutex<HashMap<String, String>>>,        // access token -> certificate id
 }
 
 impl MemoryStorage {
     pub fn new() -> Self {
         Self {
             certificates: Arc::new(Mutex::new(HashMap::new())),
+            pre_authorized_codes: Arc::new(Mutex::new(HashMap::new())),
+            access_tokens: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 
-    pub fn store_certificate(&self, offer_id: String, certificate_data: CertificateData) {
+    pub fn store_certificate(&self, certificate_id: String, certificate_data: CertificateData) {
+        log::info!("Storing certificate with id: {}", certificate_id);
         let mut certificates = self.certificates.lock().unwrap();
-        certificates.insert(offer_id, certificate_data);
+        certificates.insert(certificate_id, certificate_data);
     }
 
-    pub fn get_certificate(&self, offer_id: &str) -> Option<CertificateData> {
+    pub fn get_certificate(&self, certificate_id: &str) -> Option<CertificateData> {
         let certificates = self.certificates.lock().unwrap();
-        certificates
-            .get(offer_id)
-            .cloned()
-            .or_else(|| certificates.values().last().cloned())
+        certificates.get(certificate_id).cloned()
+    }
+
+    pub fn associate_pre_authorized_code(
+        &self,
+        pre_authorized_code: String,
+        certificate_id: String,
+    ) {
+        log::info!(
+            "Associating pre-authorized code {} with certificate id: {}",
+            pre_authorized_code,
+            certificate_id
+        );
+        let mut codes = self.pre_authorized_codes.lock().unwrap();
+        codes.insert(pre_authorized_code, certificate_id);
+    }
+
+    pub fn associate_access_token(&self, access_token: String, certificate_id: String) {
+        log::info!(
+            "Associating access token {} with certificate id: {}",
+            access_token,
+            certificate_id
+        );
+        let mut tokens = self.access_tokens.lock().unwrap();
+        tokens.insert(access_token, certificate_id);
+    }
+
+    pub fn get_certificate_id_by_pre_authorized_code(
+        &self,
+        pre_authorized_code: &str,
+    ) -> Option<String> {
+        let codes = self.pre_authorized_codes.lock().unwrap();
+        codes.get(pre_authorized_code).cloned()
+    }
+
+    pub fn get_certificate_id_by_access_token(&self, access_token: &str) -> Option<String> {
+        let tokens = self.access_tokens.lock().unwrap();
+        tokens.get(access_token).cloned()
     }
 }
 
@@ -79,9 +119,8 @@ impl<CFC: CredentialFormatCollection + DeserializeOwned> Storage<CFC> for Memory
     }
 
     fn get_authorization_code(&self) -> Option<AuthorizationCode> {
-        log::debug!("get_authorization_code");
         let state = Uuid::new_v4().to_string();
-
+        log::debug!("get_authorization_code {}", state);
         Some(AuthorizationCode {
             issuer_state: Some(state),
             authorization_server: None,
@@ -89,36 +128,54 @@ impl<CFC: CredentialFormatCollection + DeserializeOwned> Storage<CFC> for Memory
     }
 
     fn get_authorization_response(&self) -> Option<AuthorizationResponse> {
-        Some(AuthorizationResponse {
-            code: CODE.clone(),
-            state: None,
-        })
+        let code = generate_authorization_code(16);
+
+        Some(AuthorizationResponse { code, state: None })
     }
 
     fn get_pre_authorized_code(&self) -> Option<PreAuthorizedCode> {
-        log::debug!("get_pre_authorized_code");
-        Some(PRE_AUTHORIZED_CODE.clone())
+        Some(generate_pre_authorized_code())
     }
 
     fn get_token_response(&self, token_request: TokenRequest) -> Option<TokenResponse> {
         log::debug!("get_token_response: {:?}", token_request);
-        match token_request {
-            TokenRequest::AuthorizationCode { code, .. } => code == CODE.clone(),
+        let (is_valid, pre_authorized_code) = match token_request {
+            TokenRequest::AuthorizationCode { code, .. } => (
+                self.get_certificate_id_by_access_token(&code).is_some(),
+                None,
+            ),
             TokenRequest::PreAuthorizedCode {
                 pre_authorized_code,
                 ..
-            } => pre_authorized_code == PRE_AUTHORIZED_CODE.pre_authorized_code,
+            } => (
+                self.get_certificate_id_by_pre_authorized_code(&pre_authorized_code)
+                    .is_some(),
+                Some(pre_authorized_code),
+            ),
+        };
+
+        if is_valid {
+            let access_token = generate_authorization_code(16); // Generate a new access token
+            if let Some(pre_authorized_code) = pre_authorized_code {
+                if let Some(certificate_id) =
+                    self.get_certificate_id_by_pre_authorized_code(&pre_authorized_code)
+                {
+                    self.associate_access_token(access_token.clone(), certificate_id);
+                }
+            }
+
+            Some(TokenResponse {
+                access_token,
+                token_type: "bearer".to_string(),
+                expires_in: Some(86400),
+                refresh_token: None,
+                scope: None,
+                c_nonce: Some(C_NONCE.clone()),
+                c_nonce_expires_in: Some(86400),
+            })
+        } else {
+            None
         }
-        .then_some(TokenResponse {
-            // TODO: dynamically create this.
-            access_token: ACCESS_TOKEN.clone(),
-            token_type: "bearer".to_string(),
-            expires_in: Some(86400),
-            refresh_token: None,
-            scope: None,
-            c_nonce: Some(C_NONCE.clone()),
-            c_nonce_expires_in: Some(86400),
-        })
     }
 
     fn get_credential_response(
@@ -129,10 +186,7 @@ impl<CFC: CredentialFormatCollection + DeserializeOwned> Storage<CFC> for Memory
         credential_format: CFC,
         signer: SigningSubject,
     ) -> Option<CredentialResponse> {
-        log::debug!(
-            "Getting credential response in memory storage {}",
-            access_token
-        );
+        log::debug!("Getting credential response for {}", access_token);
 
         log::debug!("access_token: {}", access_token);
         log::debug!("credential_format: {:?}", credential_format);
@@ -153,20 +207,25 @@ impl<CFC: CredentialFormatCollection + DeserializeOwned> Storage<CFC> for Memory
             _ => unreachable!("Credential format not supported"),
         };
 
-        let certificate = self.get_certificate(&access_token);
+        let certificate_id = self.get_certificate_id_by_access_token(&access_token);
+        log::debug!("certificate_id: {:?}", certificate_id);
 
-        let credential_json: serde_json::Value = match &type_[..] {
-            [_, b] if b == "KonnektorenCertificate" => match certificate {
-                Some(certificate) => {
-                    let achievement_credential: AchievementCredential = certificate.into();
-                    serde_json::to_value(achievement_credential).unwrap()
-                }
-                None => serde_json::from_reader(
-                    File::open("./assets/konnektoren_certificate.json").unwrap(),
-                )
-                .unwrap(),
-            },
-            _ => unreachable!(),
+        let certificate = certificate_id
+            .clone()
+            .and_then(|id| self.get_certificate(&id));
+
+        let credential_json: serde_json::Value = match certificate {
+            Some(certificate) => {
+                let achievement_credential: AchievementCredential = certificate.into();
+                serde_json::to_value(achievement_credential).unwrap()
+            }
+            None => {
+                log::error!(
+                    "Certificate not found for certificate id: {:?}",
+                    certificate_id
+                );
+                return None;
+            }
         };
 
         log::debug!("Credential JSON: {:?}", credential_json);
@@ -177,7 +236,7 @@ impl<CFC: CredentialFormatCollection + DeserializeOwned> Storage<CFC> for Memory
 
         log::debug!("Verifiable Credential: {:?}", verifiable_credential);
 
-        (access_token == ACCESS_TOKEN.clone()).then_some(CredentialResponse {
+        Some(CredentialResponse {
             credential: CredentialResponseType::Immediate {
                 credential: serde_json::to_value(block_on(async {
                     jwt::encode(

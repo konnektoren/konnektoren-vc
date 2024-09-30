@@ -23,10 +23,11 @@ pub async fn post_certificate_and_get_offer(
     Json(certificate_data): Json<CertificateData>,
 ) -> Result<impl IntoResponse, StatusCode> {
     let service = CertificateService::new(&manager);
-    service
+    let offer_url = service
         .generate_offer_url(&certificate_data)
-        .map(Json)
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
+        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    Ok(Json(offer_url))
 }
 
 pub fn create_router() -> Router<ManagerType> {
