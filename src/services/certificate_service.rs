@@ -1,28 +1,22 @@
 use crate::certificate_data::CertificateData;
-use crate::config::load_config;
-use crate::storage::MemoryStorage;
+use crate::manager::ManagerType;
+use anyhow::Result;
 use qrcodegen::{QrCode, QrCodeEcc};
-use uuid::Uuid;
+use url::Url;
 
 pub struct CertificateService<'a> {
-    issuer_url: String,
-    storage: &'a MemoryStorage,
+    manager: &'a ManagerType,
 }
 
 impl<'a> CertificateService<'a> {
-    pub fn new(storage: &'a MemoryStorage) -> Self {
-        let (_, issuer_url) = load_config();
-        Self {
-            issuer_url,
-            storage,
-        }
+    pub fn new(manager: &'a ManagerType) -> Self {
+        Self { manager }
     }
 
-    pub fn generate_qr_code(&self, certificate_data: &CertificateData) -> Result<String, String> {
-        let credential_offer_url = self.generate_offer_url(certificate_data)?;
+    pub fn generate_qr_code(&self, certificate_data: &CertificateData) -> Result<String> {
+        let offer_url = self.generate_offer_url(certificate_data)?;
 
-        let qr = QrCode::encode_text(&credential_offer_url, QrCodeEcc::Medium)
-            .map_err(|e| e.to_string())?;
+        let qr = QrCode::encode_text(&offer_url, QrCodeEcc::Medium)?;
 
         Ok(self.qr_to_string(&qr))
     }
@@ -39,21 +33,36 @@ impl<'a> CertificateService<'a> {
         result
     }
 
-    pub fn get_issuer_url(&self) -> &str {
-        &self.issuer_url
+    pub fn generate_offer_url(&self, certificate_data: &CertificateData) -> Result<String> {
+        let offer_url = self.manager.credential_offer_query(false)?;
+
+        // Parse the URL and extract the credential_offer parameter
+        let parsed_url = Url::parse(&offer_url)?;
+        let credential_offer = parsed_url
+            .query_pairs()
+            .find(|(key, _)| key == "credential_offer")
+            .map(|(_, value)| value.into_owned())
+            .ok_or_else(|| anyhow::anyhow!("No credential offer found in URL"))?;
+
+        // Decode and parse the credential offer JSON
+        let decoded_offer = urlencoding::decode(&credential_offer)?;
+        let offer_json: serde_json::Value = serde_json::from_str(&decoded_offer)?;
+
+        // Extract the pre-authorized code
+        let pre_authorized_code = offer_json["grants"]
+            ["urn:ietf:params:oauth:grant-type:pre-authorized_code"]["pre-authorized_code"]
+            .as_str()
+            .ok_or_else(|| anyhow::anyhow!("No pre-authorized code found"))?;
+
+        // Store the certificate data with the pre-authorized code
+        self.manager
+            .storage
+            .store_certificate(pre_authorized_code.to_string(), certificate_data.clone());
+
+        Ok(offer_url)
     }
 
-    pub fn generate_offer_url(&self, certificate_data: &CertificateData) -> Result<String, String> {
-        let offer_id = Uuid::new_v4().to_string();
-        let credential_offer_uri = format!("{}/api/v1/offers/{}", self.issuer_url, offer_id);
-
-        // Store the certificate data
-        self.storage
-            .store_certificate(offer_id.clone(), certificate_data.clone());
-
-        Ok(format!(
-            "openid-credential-offer://?credential_offer_uri={}",
-            credential_offer_uri
-        ))
+    pub fn get_certificate(&self, offer_id: &str) -> Option<CertificateData> {
+        self.manager.storage.get_certificate(offer_id)
     }
 }

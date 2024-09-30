@@ -31,10 +31,9 @@ async fn generate_example_qr_image(
         date: Utc::now(),
     };
 
-    let service = CertificateService::new(&manager.storage);
-
-    let qr_url = manager
-        .credential_offer_query(false)
+    let service = CertificateService::new(&manager);
+    let qr_url = service
+        .generate_offer_url(&certificate_data)
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     // Parse the URL and extract the credential_offer parameter
