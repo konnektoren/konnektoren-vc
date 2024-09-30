@@ -12,6 +12,6 @@ RUN apt-get update && apt install -y openssl ca-certificates \
     && update-ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-COPY assets ./assets
+COPY assets ./app/assets
 COPY --from=builder /app/target/release/konnektoren-vc /usr/local/bin/konnektoren-vc
 CMD ["konnektoren-vc"]
