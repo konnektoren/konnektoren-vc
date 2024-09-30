@@ -9,20 +9,6 @@ use axum::{Json, Router};
 use serde_json::Value;
 use url::Url;
 
-/// Generate QR Code for Certificate issuance.
-/// The user sends certificate data and receives a QR code to scan with the UniMe wallet.
-#[utoipa::path(
-    post,
-    operation_id = "generate_certificate_qr",
-    tag = "certificate_v1",
-    path = "/api/v1/certificates/qr",
-    request_body = CertificateData,
-    responses(
-        (status = 200, description = "QR Code generated successfully", body = String),
-        (status = 400, description = "Invalid request data"),
-        (status = 500, description = "Internal server error")
-    )
-)]
 pub async fn send_certificate_and_get_qr(
     State(manager): State<ManagerType>,
     Json(certificate_data): Json<CertificateData>,

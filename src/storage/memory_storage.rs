@@ -18,7 +18,7 @@ use oid4vci::{
     VerifiableCredentialJwt,
 };
 use reqwest::Url;
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::de::DeserializeOwned;
 use serde_json::json;
 
 lazy_static! {
