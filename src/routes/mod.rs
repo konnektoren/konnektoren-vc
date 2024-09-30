@@ -1,3 +1,4 @@
+pub mod assets;
 mod example;
 pub mod openapi;
 pub mod v1;

@@ -1,7 +1,7 @@
 use crate::config::{load_config, Config};
 use crate::manager::ConfigurableManager;
 use crate::storage::MemoryStorage;
-use crate::{create_example_router, manager::ManagerType};
+use crate::{assets, create_example_router, manager::ManagerType};
 use crate::{v1, well_known};
 use anyhow::Result;
 use axum::Router;
@@ -39,7 +39,8 @@ pub async fn start_server() -> Result<()> {
     let app = Router::new()
         .nest("/api/v1", v1::create_router())
         .nest("/example", create_example_router())
-        .nest("/.well-known", well_known::create_router());
+        .nest("/.well-known", well_known::create_router())
+        .nest("/", assets::create_router());
 
     // Initialize the server with the app as the extension router
     let mut server = Server::setup(credential_issuer_manager, Some(app))?;

@@ -3,56 +3,150 @@
   "cryptographic_binding_methods_supported": ["did:key"],
   "credential_signing_alg_values_supported": ["EdDSA"],
   "credential_definition": {
-    "type": ["VerifiableCredential", "KonnektorenCredential"],
+    "type": ["VerifiableCredential", "KonnektorenCertificate"],
     "credentialSubject": {
-      "Level": {
+      "id": {
         "display": [
           {
-            "name": "Level",
+            "name": "Subject ID",
             "locale": "en-US"
           }
         ]
       },
-      "Total Challenges": {
+      "type": {
         "display": [
           {
-            "name": "Total Challenges",
+            "name": "Subject Type",
             "locale": "en-US"
           }
         ]
       },
-      "Solved Challenges": {
+      "creditsEarned": {
         "display": [
           {
-            "name": "Solved Challenges",
+            "name": "Credits Earned",
             "locale": "en-US"
           }
         ]
       },
-      "Performance Percentage": {
-        "display": [
-          {
-            "name": "Performance Percentage",
-            "locale": "en-US"
+      "achievement": {
+        "id": {
+          "display": [
+            {
+              "name": "Achievement ID",
+              "locale": "en-US"
+            }
+          ]
+        },
+        "type": {
+          "display": [
+            {
+              "name": "Achievement Type",
+              "locale": "en-US"
+            }
+          ]
+        },
+        "creditsAvailable": {
+          "display": [
+            {
+              "name": "Credits Available",
+              "locale": "en-US"
+            }
+          ]
+        },
+        "criteria": {
+          "narrative": {
+            "display": [
+              {
+                "name": "Criteria Narrative",
+                "locale": "en-US"
+              }
+            ]
           }
-        ]
+        },
+        "description": {
+          "display": [
+            {
+              "name": "Achievement Description",
+              "locale": "en-US"
+            }
+          ]
+        },
+        "name": {
+          "display": [
+            {
+              "name": "Achievement Name",
+              "locale": "en-US"
+            }
+          ]
+        }
       },
-      "Name": {
+      "result": {
         "display": [
           {
-            "name": "Name",
-            "locale": "en-US"
-          }
-        ]
-      },
-      "Date": {
-        "display": [
-          {
-            "name": "Date",
+            "name": "Result",
             "locale": "en-US"
           }
         ]
       }
+    },
+    "name": {
+      "display": [
+        {
+          "name": "Credential Name",
+          "locale": "en-US"
+        }
+      ]
+    },
+    "description": {
+      "display": [
+        {
+          "name": "Credential Description",
+          "locale": "en-US"
+        }
+      ]
+    },
+    "issuer": {
+      "id": {
+        "display": [
+          {
+            "name": "Issuer ID",
+            "locale": "en-US"
+          }
+        ]
+      },
+      "type": {
+        "display": [
+          {
+            "name": "Issuer Type",
+            "locale": "en-US"
+          }
+        ]
+      },
+      "name": {
+        "display": [
+          {
+            "name": "Issuer Name",
+            "locale": "en-US"
+          }
+        ]
+      }
+    },
+    "issuanceDate": {
+      "display": [
+        {
+          "name": "Issuance Date",
+          "locale": "en-US"
+        }
+      ]
+    },
+    "awardedDate": {
+      "display": [
+        {
+          "name": "Awarded Date",
+          "locale": "en-US"
+        }
+      ]
     }
   },
   "proof_types_supported": {
@@ -62,11 +156,11 @@
   },
   "display": [
     {
-      "name": "Konnektoren Credential Issuer",
+      "name": "Konnektoren Certificate",
       "locale": "en-US",
       "logo": {
-        "url": "https://konnektoren.help/favicon.png",
-        "alt_text": "konnektoren.help square logo"
+        "url": "https://vc.konnektoren.help/assets/favicon.png",
+        "alt_text": "Konnektoren logo"
       },
       "background_color": "#ff7e00",
       "text_color": "#6200ea"

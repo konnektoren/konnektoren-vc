@@ -33,6 +33,7 @@ lazy_static! {
 
 use crate::certificate_data::CertificateData;
 use std::sync::{Arc, Mutex};
+use types_ob_v3::prelude::AchievementCredential;
 use uuid::Uuid;
 
 #[derive(Clone)]
@@ -67,7 +68,7 @@ impl<CFC: CredentialFormatCollection + DeserializeOwned> Storage<CFC> for Memory
     ) -> HashMap<String, CredentialConfigurationsSupportedObject<CFC>> {
         log::debug!("get_credential_configurations_supported");
         vec![(
-            "KonnektorenCertificate_JWT".to_string(),
+            "KonnektorenCertificate".to_string(),
             serde_json::from_reader(
                 File::open("./assets/konnektoren_certificate_config.json").unwrap(),
             )
@@ -152,36 +153,27 @@ impl<CFC: CredentialFormatCollection + DeserializeOwned> Storage<CFC> for Memory
             _ => unreachable!("Credential format not supported"),
         };
 
-        let credential_json = match &type_[..] {
-            [_, b] if b == "KonnektorenCredential" => {
-                File::open("./assets/konnektoren_certificate.json").unwrap()
-            }
+        let certificate = self.get_certificate(&access_token);
+
+        let credential_json: serde_json::Value = match &type_[..] {
+            [_, b] if b == "KonnektorenCertificate" => match certificate {
+                Some(certificate) => {
+                    let achievement_credential: AchievementCredential = certificate.into();
+                    serde_json::to_value(achievement_credential).unwrap()
+                }
+                None => serde_json::from_reader(
+                    File::open("./assets/konnektoren_certificate.json").unwrap(),
+                )
+                .unwrap(),
+            },
             _ => unreachable!(),
         };
 
         log::debug!("Credential JSON: {:?}", credential_json);
 
-        let mut verifiable_credential: serde_json::Value =
-            serde_json::from_reader(credential_json).unwrap();
+        let mut verifiable_credential: serde_json::Value = credential_json;
         verifiable_credential["issuer"] = json!(issuer_did);
         verifiable_credential["credentialSubject"]["id"] = json!(subject_did);
-
-        let certificate = self.get_certificate(&access_token);
-
-        if let Some(certificate) = certificate {
-            verifiable_credential["credentialSubject"]["Level"] =
-                serde_json::to_value(certificate.game_path_name).unwrap();
-            verifiable_credential["credentialSubject"]["Total Challenges"] =
-                serde_json::to_value(certificate.total_challenges).unwrap();
-            verifiable_credential["credentialSubject"]["Solved Challenges"] =
-                serde_json::to_value(certificate.solved_challenges).unwrap();
-            verifiable_credential["credentialSubject"]["Performance Percentage"] =
-                serde_json::to_value(certificate.performance_percentage).unwrap();
-            verifiable_credential["credentialSubject"]["Name"] =
-                serde_json::to_value(certificate.profile_name).unwrap();
-            verifiable_credential["credentialSubject"]["Date"] =
-                serde_json::to_value(certificate.date).unwrap();
-        }
 
         log::debug!("Verifiable Credential: {:?}", verifiable_credential);
 
