@@ -11,7 +11,7 @@ FROM debian:bookworm-slim
 RUN apt-get update && apt install -y openssl ca-certificates \
     && update-ca-certificates \
     && rm -rf /var/lib/apt/lists/*
-
-COPY assets ./app/assets
-COPY --from=builder /app/target/release/konnektoren-vc /usr/local/bin/konnektoren-vc
+WORKDIR /app
+COPY assets ./assets
+COPY --from=builder /app/target/release/konnektoren-vc ./konnektoren-vc
 CMD ["konnektoren-vc"]

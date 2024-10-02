@@ -3,9 +3,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    image: ghcr.io/konnektoren/konnektoren-vc:latest
     environment:
-      - PRIVATE_KEY=${PRIVATE_KEY}
-      - ISSUER_URL=${ISSUER_URL}
+      - PRIVATE_KEY=${PRIVATE_KEY:-"seed-phrase"}
+      - ISSUER_URL=${ISSUER_URL:-"https://issuer.example.com"}
       - RUST_LOG=${LOG_LEVEL:-debug}
       - DOMAIN=${DOMAIN:-localhost}
     #ports:
