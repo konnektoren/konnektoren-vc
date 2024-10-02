@@ -1,6 +1,15 @@
 # konnektoren-vc
 Verifiable Credentials for Konnektoren
 
+## Overview
+
+Konnektoren-VC is an issuer service for Verifiable Credentials (VCs) and Open Badges. It allows the creation and issuance of digital certificates and badges that are cryptographically secure, tamper-evident, and easily verifiable.
+
+Key features:
+- Issues W3C Verifiable Credentials
+- Supports Open Badges v3 specification
+- Provides a secure and scalable infrastructure for digital credential issuance
+
 ## Running with Docker Compose
 
 To run this project using Docker Compose, follow these steps:
