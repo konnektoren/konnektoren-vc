@@ -14,4 +14,4 @@ RUN apt-get update && apt install -y openssl ca-certificates \
 WORKDIR /app
 COPY assets ./assets
 COPY --from=builder /app/target/release/konnektoren-vc ./konnektoren-vc
-CMD ["konnektoren-vc"]
+CMD ["./konnektoren-vc"]
