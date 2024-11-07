@@ -17,9 +17,9 @@ jsonwebtoken = "9.3.0"
 konnektoren-core = { git = "https://github.com/konnektoren/konnektoren-rs.git", default-features = false }
 log = "0.4.21"
 num-bigint = "0.4.5"
-oid4vc-core = { git = "https://github.com/impierce/openid4vc", branch = "dev" }
-oid4vci = { git = "https://github.com/impierce/openid4vc", branch = "dev" }
-oid4vc-manager = { git = "https://github.com/impierce/openid4vc", branch = "dev" }
+oid4vc-core = { git = "https://github.com/impierce/openid4vc", branch = "feat/sd-jwt-vc" }
+oid4vci = { git = "https://github.com/impierce/openid4vc", branch = "feat/sd-jwt-vc" }
+oid4vc-manager = { git = "https://github.com/impierce/openid4vc", branch = "feat/sd-jwt-vc" }
 pretty_env_logger = "0.5.0"
 qrcodegen = "1.0.0"
 serde = { version = "1.0", features = ["derive"] }
