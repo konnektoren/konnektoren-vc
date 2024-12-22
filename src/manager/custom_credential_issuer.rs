@@ -56,7 +56,7 @@ where
                         "name": "Konnektoren Credential Issuer",
                         "locale": "en-US",
                         "logo": {
-                            "url": "https://konnektoren.help/favicon.png",
+                            "uri": "https://konnektoren.help/favicon.png",
                             "alt_text": "konnektoren.help square logo"
                         },
                         "background_color": "#ff7e00",

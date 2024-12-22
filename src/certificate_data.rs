@@ -36,6 +36,12 @@ impl From<CertificateData> for AchievementCredential {
                 "This certificate recognizes the achievement of {} in completing the course.",
                 cert_data.profile_name
             ))
+            .image(
+                ImageBuilder::default()
+                    .id(konnektoren_image())
+                    .type_("Image")
+                    .caption("Konnektoren Logo".to_string()),
+            )
             .credits_available(cert_data.total_challenges as f64)
             .try_into()
             .unwrap();
@@ -44,6 +50,12 @@ impl From<CertificateData> for AchievementCredential {
             .id("did:example:ebfeb1f712ebc6f1c276e12ec21".to_string())
             .type_("AchievementSubject")
             .achievement(achievement)
+            .image(
+                ImageBuilder::default()
+                    .id(konnektoren_image())
+                    .type_("Image")
+                    .caption("Konnektoren Logo".to_string()),
+            )
             .credits_earned(cert_data.solved_challenges as f64)
             .result(vec![ResultBuilder::default()
                 .achieved_level(cert_data.game_path_name.clone())
@@ -57,6 +69,12 @@ impl From<CertificateData> for AchievementCredential {
             .id("vc.konnektoren.help")
             .type_("Profile")
             .name("Konnektoren".to_string())
+            .image(
+                ImageBuilder::default()
+                    .id(konnektoren_image())
+                    .type_("Image")
+                    .caption("Konnektoren Logo".to_string()),
+            )
             .try_into()
             .unwrap();
 
@@ -82,8 +100,9 @@ impl From<CertificateData> for AchievementCredential {
             ))
             .image(
                 ImageBuilder::default()
-                    .id("https://vc.konnektoren.help/assets/favicon.png".to_string())
-                    .type_("Image"),
+                    .id(konnektoren_image())
+                    .type_("Image")
+                    .caption("Konnektoren Logo".to_string()),
             )
             .try_into()
             .unwrap()
