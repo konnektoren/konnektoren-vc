@@ -20,6 +20,7 @@ use oid4vci::{
 use reqwest::Url;
 use serde::de::DeserializeOwned;
 use serde_json::json;
+use tracing::{debug, error, info, instrument};
 
 lazy_static! {
     pub static ref C_NONCE: String = "tZignsnFbp".to_string();
@@ -53,17 +54,19 @@ impl MemoryStorage {
         }
     }
 
+    #[instrument(skip_all)]
     pub fn store_certificate(&self, certificate_id: String, certificate_data: CertificateData) {
         log::info!("Storing certificate with id: {}", certificate_id);
         let mut certificates = self.certificates.lock().unwrap();
         certificates.insert(certificate_id, certificate_data);
     }
-
+    #[instrument(skip_all)]
     pub fn get_certificate(&self, certificate_id: &str) -> Option<CertificateData> {
         let certificates = self.certificates.lock().unwrap();
         certificates.get(certificate_id).cloned()
     }
 
+    #[instrument(skip_all)]
     pub fn associate_pre_authorized_code(
         &self,
         pre_authorized_code: String,
@@ -77,7 +80,7 @@ impl MemoryStorage {
         let mut codes = self.pre_authorized_codes.lock().unwrap();
         codes.insert(pre_authorized_code, certificate_id);
     }
-
+    #[instrument(skip_all)]
     pub fn associate_access_token(&self, access_token: String, certificate_id: String) {
         log::info!(
             "Associating access token {} with certificate id: {}",
@@ -87,7 +90,7 @@ impl MemoryStorage {
         let mut tokens = self.access_tokens.lock().unwrap();
         tokens.insert(access_token, certificate_id);
     }
-
+    #[instrument(skip_all)]
     pub fn get_certificate_id_by_pre_authorized_code(
         &self,
         pre_authorized_code: &str,
@@ -95,7 +98,7 @@ impl MemoryStorage {
         let codes = self.pre_authorized_codes.lock().unwrap();
         codes.get(pre_authorized_code).cloned()
     }
-
+    #[instrument(skip_all)]
     pub fn get_certificate_id_by_access_token(&self, access_token: &str) -> Option<String> {
         let tokens = self.access_tokens.lock().unwrap();
         tokens.get(access_token).cloned()
@@ -103,6 +106,7 @@ impl MemoryStorage {
 }
 
 impl<CFC: CredentialFormatCollection + DeserializeOwned> Storage<CFC> for MemoryStorage {
+    #[instrument(skip_all)]
     fn get_credential_configurations_supported(
         &self,
     ) -> HashMap<String, CredentialConfigurationsSupportedObject<CFC>> {
@@ -118,6 +122,7 @@ impl<CFC: CredentialFormatCollection + DeserializeOwned> Storage<CFC> for Memory
         .collect()
     }
 
+    #[instrument(skip_all)]
     fn get_authorization_code(&self) -> Option<AuthorizationCode> {
         let state = Uuid::new_v4().to_string();
         log::debug!("get_authorization_code {}", state);
@@ -127,16 +132,19 @@ impl<CFC: CredentialFormatCollection + DeserializeOwned> Storage<CFC> for Memory
         })
     }
 
+    #[instrument(skip_all)]
     fn get_authorization_response(&self) -> Option<AuthorizationResponse> {
         let code = generate_authorization_code(16);
 
         Some(AuthorizationResponse { code, state: None })
     }
 
+    #[instrument(skip_all)]
     fn get_pre_authorized_code(&self) -> Option<PreAuthorizedCode> {
         Some(generate_pre_authorized_code())
     }
 
+    #[instrument(skip_all)]
     fn get_token_response(&self, token_request: TokenRequest) -> Option<TokenResponse> {
         log::debug!("get_token_response: {:?}", token_request);
         let (is_valid, pre_authorized_code) = match token_request {
@@ -178,6 +186,7 @@ impl<CFC: CredentialFormatCollection + DeserializeOwned> Storage<CFC> for Memory
         }
     }
 
+    #[instrument(skip_all)]
     fn get_credential_response(
         &self,
         access_token: String,
@@ -273,6 +282,7 @@ impl<CFC: CredentialFormatCollection + DeserializeOwned> Storage<CFC> for Memory
     }
 }
 
+#[instrument(skip_all)]
 pub fn get_issuer_did() -> String {
     let (priv_key, _) = load_config();
 
