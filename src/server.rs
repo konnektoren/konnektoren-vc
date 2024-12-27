@@ -8,6 +8,8 @@ use axum::Router;
 use did_key::{generate, DIDCore, Ed25519KeyPair, PatchedKeyPair};
 use oid4vc_manager::{methods::key_method::KeySubject, servers::credential_issuer::Server};
 use std::sync::Arc;
+use tower_http::trace::{self, TraceLayer};
+use tracing::Level;
 
 pub async fn start_server() -> Result<()> {
     let (priv_key, _) = load_config();
@@ -35,12 +37,19 @@ pub async fn start_server() -> Result<()> {
         config,
     )?;
 
+    let trace_layer = TraceLayer::new_for_http()
+        .make_span_with(trace::DefaultMakeSpan::new().level(Level::INFO))
+        .on_request(trace::DefaultOnRequest::new().level(Level::INFO))
+        .on_response(trace::DefaultOnResponse::new().level(Level::INFO))
+        .on_failure(trace::DefaultOnFailure::new().level(Level::ERROR));
+
     // Nest the API routes under "/api/v1"
     let app = Router::new()
         .nest("/api/v1", v1::create_router())
         .nest("/example", create_example_router())
         .nest("/.well-known", well_known::create_router())
-        .nest("/", assets::create_router());
+        .nest("/", assets::create_router())
+        .layer(trace_layer);
 
     // Initialize the server with the app as the extension router
     let mut server = Server::setup(credential_issuer_manager, Some(app))?;

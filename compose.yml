@@ -9,6 +9,8 @@ services:
       - ISSUER_URL=${ISSUER_URL:-"https://issuer.example.com"}
       - RUST_LOG=${LOG_LEVEL:-debug}
       - DOMAIN=${DOMAIN:-localhost}
+      - ENABLE_TELEMETRY=${ENABLE_TELEMETRY:-false}
+      - JAEGER_ENDPOINT=${JAEGER_ENDPOINT:-http://jaeger:14268/api/traces}
     #ports:
     #  - "3000:3000"
     env_file:
@@ -24,3 +26,11 @@ services:
       - CF_TUNNEL_TOKEN=${CF_TUNNEL_TOKEN}
     depends_on:
       - server
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    #ports:
+    #  - "14268:14268" # Jaeger compact thrift over HTTP
+    #  - "16686:16686" # Jaeger UI
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true

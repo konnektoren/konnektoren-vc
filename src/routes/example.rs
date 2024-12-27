@@ -95,6 +95,7 @@ async fn generate_example_qr_image(
     Ok(response)
 }
 
+#[tracing::instrument]
 pub fn create_example_router() -> Router<ManagerType> {
     log::info!("Creating router for /example/qr");
     Router::new().route("/qr", get(generate_example_qr_image))
