@@ -34,7 +34,7 @@ where
         subject: Arc<dyn Subject>,
         config: Config,
     ) -> Result<Self> {
-        let listener = listener.unwrap_or_else(|| TcpListener::bind("127.0.0.1:0").unwrap());
+        let listener = listener.unwrap_or_else(|| TcpListener::bind("0.0.0.0").unwrap());
         let issuer_url: Url = match config.issuer_url {
             Some(url) => url.parse()?,
             None => format!("http://{:?}", listener.local_addr()?).parse()?,
