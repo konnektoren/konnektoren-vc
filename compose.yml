@@ -1,5 +1,5 @@
 services:
-  server:
+  konnektoren-vc:
     build:
       context: .
       dockerfile: Dockerfile
@@ -25,12 +25,19 @@ services:
     environment:
       - CF_TUNNEL_TOKEN=${CF_TUNNEL_TOKEN}
     depends_on:
-      - server
+      - konnektoren-vc
 
   jaeger:
     image: jaegertracing/all-in-one:latest
+    profiles:
+      - jaeger
     #ports:
     #  - "14268:14268" # Jaeger compact thrift over HTTP
     #  - "16686:16686" # Jaeger UI
     environment:
       - COLLECTOR_OTLP_ENABLED=true
+
+networks:
+  default:
+    name: konnektoren-network
+    external: true
