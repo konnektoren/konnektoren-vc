@@ -14,4 +14,10 @@ RUN apt-get update && apt install -y openssl ca-certificates \
 WORKDIR /app
 COPY assets ./assets
 COPY --from=builder /app/target/release/konnektoren-vc ./konnektoren-vc
+
+EXPOSE 3000
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:3000/health || exit 1
+
 CMD ["./konnektoren-vc"]
