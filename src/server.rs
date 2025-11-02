@@ -2,7 +2,7 @@ use crate::config::{load_config, Config};
 use crate::manager::ConfigurableManager;
 use crate::storage::MemoryStorage;
 use crate::{assets, create_example_router, manager::ManagerType};
-use crate::{v1, well_known};
+use crate::{health, v1, well_known};
 use anyhow::Result;
 use axum::Router;
 use did_key::{generate, DIDCore, Ed25519KeyPair, PatchedKeyPair};
@@ -45,6 +45,8 @@ pub async fn start_server() -> Result<()> {
 
     // Nest the API routes under "/api/v1"
     let app = Router::new()
+        .route("/health", axum::routing::get(health::health_check))
+        .route("/ready", axum::routing::get(health::readiness_check))
         .nest("/api/v1", v1::create_router())
         .nest("/example", create_example_router())
         .nest("/.well-known", well_known::create_router())
