@@ -16,7 +16,7 @@ use tracing::Level;
 #[cfg(feature = "metrics")]
 use std::sync::OnceLock;
 #[cfg(feature = "metrics")]
-static GLOBAL_METRICS: OnceLock<crate::metrics::Metrics> = OnceLock::new();
+pub static GLOBAL_METRICS: OnceLock<crate::metrics::Metrics> = OnceLock::new();
 
 pub async fn start_server() -> Result<()> {
     #[cfg(feature = "metrics")]
@@ -70,15 +70,11 @@ pub async fn start_server() -> Result<()> {
     // Add metrics endpoint if enabled
     #[cfg(feature = "metrics")]
     {
-        async fn metrics_handler() -> impl axum::response::IntoResponse {
-            if let Some(metrics) = GLOBAL_METRICS.get() {
-                metrics.gather_metrics()
-            } else {
-                "# Metrics not initialized\n".to_string()
-            }
-        }
-
-        app = app.route("/metrics", get(metrics_handler));
+        app = app
+            .route("/metrics", get(crate::metrics::metrics_handler))
+            .layer(axum::middleware::from_fn(
+                middleware::metrics::metrics_middleware,
+            ));
     }
 
     let app = app.layer(trace_layer);
