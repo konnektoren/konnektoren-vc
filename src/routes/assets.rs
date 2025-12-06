@@ -1,6 +1,5 @@
 use crate::manager::ManagerType;
-use axum::routing::get_service;
-use axum::Router;
+use axum::{routing::get_service, Router};
 use std::path::PathBuf;
 use tower_http::services::ServeDir;
 
